@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import filedialog
 from openpyxl import load_workbook
 import sys
+import time
 
 
 class MetoceanData:
@@ -11,17 +12,17 @@ class MetoceanData:
         self.filepath = filepath
         # Initialise a config attribute which will be a dictionary containing all of the configuration options for the report.
         self.config = {}
-        workbook = load_workbook(filepath, read_only=True)
-        self.parse_config(workbook)
+        self.parse_config(filepath)
         self.parse_data(filepath)
 
-    def parse_config(self, workbook):
-        """parse_config: Parses the 'Config' sheet and stores all configuration parameters in a dictionary.
+    def parse_config(self, filepath):
+        """parse_config [Parses the 'Config' sheet and stores all configuration parameters in a dictionary self.config.]
 
         Args:
-            workbook (openpyxl.workbook.workbook.Workbook): excel workbook containing the configuration settings for the metocean processing.
+            filepath ([string]): [full filepath of the config excel file.]
         """
 
+        workbook = load_workbook(filepath, read_only=True)
         # Check if the 'Config' sheet exists in the config file.
         if "Config" in workbook.sheetnames:
             config_sheet = workbook["Config"]
@@ -99,12 +100,14 @@ class MetoceanData:
         print("Parsing configuration complete!")
 
     def parse_data(self, filepath):
-        """parse_data Reads the config/input file using pandas to create a dataframe and storing if in an attribute called 'data''.
+        """parse_data Reads the config/input file using pandas to create a dataframe and storing it in an attribute called 'self.data''.
 
         Args:
             filepath (string): filepath of the config/input excel sheet. Used by pandas to read the data into a dataframe.
         """
-        columns = []
+
+        print("Parsing data...", end="")
+        columns = ["A:B"]
         # Selecting which wind data columns to include
         if self.config["wind_status"]:
             if self.config["10m"]:
@@ -140,6 +143,7 @@ class MetoceanData:
         )
 
         self.data = data
+        print("Parsing data complete!")
 
 
 def main():
@@ -150,7 +154,10 @@ def main():
         title="Select the metocean configuration file."
     )
 
+    start = time.perf_counter()
     metocean_data = MetoceanData(filepath)
+    finish = time.perf_counter()
+    print(f"Finished in {finish - start} seconds.")
     print(metocean_data.data.head())
 
 
