@@ -1,3 +1,10 @@
+# Rough working files
+wind_data.txt
+wave_data.txt
+current_data.txt
+water_data.txt
+tests.ipynb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
