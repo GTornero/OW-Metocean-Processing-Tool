@@ -4,6 +4,8 @@ wave_data.txt
 current_data.txt
 water_data.txt
 tests.ipynb
+sucio.ipynb
+checks/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

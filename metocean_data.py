@@ -6,13 +6,16 @@ Metocean & Energy Assessment Department
 """
 
 import sys
+import os
 import time
 import tkinter as tk
 from tkinter import filedialog
 from openpyxl import load_workbook
 
 import pandas as pd
+import numpy as np
 
+import NSS
 
 class MetoceanData:
     """A class to manage store the user configuration settings and read and store the data inputs."""
@@ -21,10 +24,14 @@ class MetoceanData:
     def __init__(self, filepath):
         # Initialise a config attribute which will be a dictionary containing all of the configuration options for the report.
         self.config = {}
+        # Initialise a bins attribute which will be a dictionary of lists containing the centre point of the different data type bins
+        self.bins = {} 
         # Execute the parse_config file to populate the config attribute.
         self.parse_config(filepath)
         # Read and store the data
         self.parse_data()
+        # Create sector and bins from data and populate the bins attribute
+        self.sectorise()
 
     def parse_config(self, filepath):
         """parse_config [Parses the 'Config' sheet and stores all configuration parameters in a dictionary self.config.]
@@ -51,7 +58,12 @@ class MetoceanData:
             # Bin type defaults to left is there is an erroneous input in the config file for any reason
             self.config["bin_type"] = "left"
 
-        self.config["data_threshold"] = config_sheet["D6"].value / 100
+        # method for treating data within wind speed bin for NSS tables
+        if config_sheet["D6"].value == "mean" or "median":
+            self.config["method"] = config_sheet["D6"].value
+        else:
+            # Method defaults to median if there is an erroneous input in the config file for any reason
+            self.config["method"] = "median"
 
         # Parsing Config of wind data
         if config_sheet["F9"].value == "ON":
@@ -84,9 +96,10 @@ class MetoceanData:
             self.config["wave_northing"] = config_sheet["D25"].value
             self.config["wave_spectral"] = config_sheet["D26"].value
             self.config["peak_enhancement"] = config_sheet["D27"].value
-            self.config["wave_height_bin_size"] = config_sheet["D28"].value
-            self.config["wave_period_bin_size"] = config_sheet["D29"].value
-            self.config["wave_sectors"] = config_sheet["D30"].value
+            self.config["derive_peak_enhancement"] = config_sheet["D28"].value
+            self.config["wave_height_bin_size"] = config_sheet["D29"].value
+            self.config["wave_period_bin_size"] = config_sheet["D30"].value
+            self.config["wave_sectors"] = config_sheet["D31"].value
 
         # Parsing config of current data
         if config_sheet["F32"].value == "ON":
@@ -95,13 +108,13 @@ class MetoceanData:
             self.config["current_status"] = False
 
         if self.config["current_status"]:
-            self.config["current_source"] = config_sheet["D33"].value
-            self.config["current_projection"] = config_sheet["D34"].value
-            self.config["current_easting"] = config_sheet["D35"].value
-            self.config["current_northing"] = config_sheet["D36"].value
-            self.config["current_bin_size"] = config_sheet["D37"].value
-            self.config["current_sectors"] = config_sheet["D38"].value
-            self.config["current_components"] = config_sheet["D39"].value
+            self.config["current_source"] = config_sheet["D34"].value
+            self.config["current_projection"] = config_sheet["D35"].value
+            self.config["current_easting"] = config_sheet["D36"].value
+            self.config["current_northing"] = config_sheet["D37"].value
+            self.config["current_bin_size"] = config_sheet["D38"].value
+            self.config["current_sectors"] = config_sheet["D39"].value
+            self.config["current_components"] = config_sheet["D40"].value
 
         # Parsing config of seawater data
         if config_sheet["F41"].value == "ON":
@@ -109,10 +122,10 @@ class MetoceanData:
         else:
             self.config["water_status"] = False
         if self.config["water_status"]:
-            self.config["water_source"] = config_sheet["D42"].value
-            self.config["water_projection"] = config_sheet["D43"].value
-            self.config["water_easting"] = config_sheet["D44"].value
-            self.config["water_northing"] = config_sheet["D45"].value
+            self.config["water_source"] = config_sheet["D43"].value
+            self.config["water_projection"] = config_sheet["D44"].value
+            self.config["water_easting"] = config_sheet["D45"].value
+            self.config["water_northing"] = config_sheet["D46"].value
 
         print("Parsing configuration complete!")
 
@@ -148,7 +161,8 @@ class MetoceanData:
             [pandas.Dataframe]: [Dataframe of the wind data timeseries]
         """
         # Read wind data file into a dataframe
-        wind_file = filedialog.askopenfilename(title="Select the wind data file.")
+        # wind_file = filedialog.askopenfilename(title="Select the wind data file.")
+        wind_file = os.getcwd() + "//wind_data.txt"
         wind_df = pd.read_csv(wind_file, sep="\t", header=None)
         # Check if the number of columns is correct.
         if self.config["10m"]:
@@ -194,7 +208,8 @@ class MetoceanData:
             [pandas.Dataframe]: [Dataframe of the wave data timeseries]
         """
         # Read wave data file into a dataframe
-        wave_file = filedialog.askopenfilename(title="Select the wave data file.")
+        # wave_file = filedialog.askopenfilename(title="Select the wave data file.")
+        wave_file = os.getcwd() + "//wave_data.txt"
         wave_df = pd.read_csv(wave_file, sep="\t", header=None)
         # Check if there should be spectral wave components (swell and windsea)
         if self.config["wave_spectral"]:
@@ -250,6 +265,9 @@ class MetoceanData:
                     inplace=True,
                     axis="columns",
                 )
+                if self.config["derive_peak_enhancement"]:
+                    wave_df = self.get_gamma(wave_df) #populate wave_df with values for gamma
+
         # If there are no spectral components.
         else:
             # Check if the user has input peak enhancement factor.
@@ -272,6 +290,8 @@ class MetoceanData:
                 wave_df.rename(
                     {2: "Hs", 3: "WvD", 4: "Tp", 5: "Tz"}, inplace=True, axis="columns"
                 )
+                if self.config["derive_peak_enhancement"]:
+                    wave_df = self.get_gamma(wave_df)  #populate wave_df with values for gamma
 
         wave_df = make_time_index(wave_df)
         if True in wave_df.index.duplicated():
@@ -288,7 +308,9 @@ class MetoceanData:
             [pandas.Dataframe]: [Dataframe of the current data timeseries]
         """
         # Read wave data file into a dataframe
-        current_file = filedialog.askopenfilename(title="Select the current data file.")
+        # current_file = filedialog.askopenfilename(title="Select the current data file.")
+        current_file = os.getcwd() + "//current_data.txt"
+
         current_df = pd.read_csv(current_file, sep="\t", header=None)
         # Check if there are tidal and residual current components
         if self.config["current_components"]:
@@ -334,7 +356,9 @@ class MetoceanData:
             [pandas.Dataframe]: [Dataframe of the water data timeseries]
         """
         # Read water data file into a dataframe
-        water_file = filedialog.askopenfilename(title="Select the seawater data file.")
+        # water_file = filedialog.askopenfilename(title="Select the seawater data file.")
+        water_file = os.getcwd() + "//water_data.txt"
+
         water_df = pd.read_csv(water_file, sep="\t", header=None)
         # Check if the water file has the correct number of columns.
         if len(water_df.columns) != 5:
@@ -348,7 +372,99 @@ class MetoceanData:
                 "Duplicate timestamps in the water data file. Please check and try again."
             )
         return water_df
+    
+    def get_gamma(self, wave_df):
 
+        wave_df["G"] = (wave_df["Tp"]/np.sqrt(wave_df["Hs"])).map(gamma_DNVGL)
+
+        if self.config["wave_spectral"]:
+            wave_df["G_W"] = (wave_df["Tp_W"]/np.sqrt(wave_df["Hs_W"])).map(gamma_DNVGL)
+            wave_df["G_S"] = 10
+
+        return wave_df
+
+    def sectorise(self):
+        """sectorise [Creates new columns into self.data for all the relevant variables 
+        which need to be divided into bins or sectors. 
+        Column headers are the same as the original plus "_bins" or "_sectors"]
+        """     
+        right = False
+        if self.config["bin_type"] == "right": right = True
+
+        if self.config["wind_status"]:
+            self.data["WS_bins"] = self.get_bins("WS", self.config["wind_bin_size"], right)
+            self.data["WnD_sectors"] = self.get_sectors("WnD", self.config["wind_sectors"], right)
+            if self.config["10m"]:
+                self.data["WS_10_bins"] = self.get_bins("WS_10", self.config["wind_bin_size"], right)
+                self.data["WnD_10_sectors"] = self.get_sectors("WnD_10", self.config["wind_sectors"], right)
+
+        if self.config["wave_status"]:
+            self.data["Hs_bins"] = self.get_bins("Hs", self.config["wave_height_bin_size"], right)
+            self.data["Tp_bins"] = self.get_bins("Tp", self.config["wave_period_bin_size"], right)
+            self.data["Tz_bins"] = self.get_bins("Tz", self.config["wave_period_bin_size"], right)
+            self.data["WvD_sectors"] = self.get_sectors("WvD", self.config["wave_sectors"], right)
+
+            if self.config["wave_spectral"]:
+                self.data["Hs_W_bins"] = self.get_bins("Hs_W", self.config["wave_height_bin_size"], right)
+                self.data["Tp_W_bins"] = self.get_bins("Tp_W", self.config["wave_period_bin_size"], right)
+                self.data["Tz_W_bins"] = self.get_bins("Tz_W", self.config["wave_period_bin_size"], right)
+                self.data["WvD_W_sectors"] = self.get_sectors("WvD_W", self.config["wave_sectors"], right)
+                self.data["Hs_S_bins"] = self.get_bins("Hs_S", self.config["wave_height_bin_size"], right)
+                self.data["Tp_S_bins"] = self.get_bins("Tp_S", self.config["wave_period_bin_size"], right)
+                self.data["Tz_S_bins"] = self.get_bins("Tz_S", self.config["wave_period_bin_size"], right)
+                self.data["WvD_S_sectors"] = self.get_sectors("WvD_S", self.config["wave_sectors"], right)
+
+            if self.config["current_status"]:
+                self.data["SV_bins"] = self.get_bins("SV", self.config["current_bin_size"], right)
+                self.data["DaV_bins"] = self.get_bins("DaV", self.config["current_bin_size"], right)
+                self.data["CD_sectors"] = self.get_sectors("CD", self.config["current_sectors"], right)
+                if self.config["current_components"]:
+                    self.data["SV_Tid_bins"] = self.get_bins("SV_Tid", self.config["current_bin_size"], right)
+                    self.data["DaV_Tid_bins"] = self.get_bins("DaV_Tid", self.config["current_bin_size"], right)
+                    self.data["CD_Tid_sectors"] = self.get_sectors("CD_Tid", self.config["current_sectors"], right)
+                    self.data["SV_Res_bins"] = self.get_bins("SV_Res", self.config["current_bin_size"], right)
+                    self.data["DaV_Res_bins"] = self.get_bins("DaV_Res", self.config["current_bin_size"], right)
+                    self.data["CD_Res_sectors"] = self.get_sectors("CD_Res", self.config["current_sectors"], right)
+
+    def get_bins(self, header, bin_size, right):
+        """get_bins [Function to get bin values for a specific column under self.data and populate self.bins]
+
+        Args:
+            header ([string]): [header of the column in self.data to get bins from]
+            bin_size ([float]): [size of the bins for this variable, as specified in self.config]
+            right ([bool]): [indicates if right boundary is closed. If False, left boudnary is closed] 
+        
+        Returns:
+            [list]: [list to append to self.data containing binned values]
+        """
+        self.bins[header] = np.arange(0, self.data[str(header)].max(), bin_size)
+        bin_list = np.digitize(self.data[str(header)], bins=self.bins[header], right=right)*bin_size-bin_size/2
+
+        return bin_list
+    
+    def get_sectors(self, header, N_Sectors, right):
+        """get_sectors [Function to get sector values for a specific column under self.data]
+
+        Args:
+            header ([string]): [header of the column in self.data to get sectors from]
+            N_sectors ([int]): [number of sectors for this variable, as specified in self.config]
+            right ([bool]): [indicates if right boundary is closed. If False, left boudnary is closed] 
+        
+        Returns:
+            [list]: [list to append to self.data containing sectorised values]
+        """
+        if right:
+            sector_list = np.where(
+                self.data[header] > (360 - ((360/N_Sectors)/2)),1,
+                self.data[header].apply(lambda x: np.ceil(((x/(360/N_Sectors))+0.5))).astype('Int64'))
+
+        else:
+            sector_list = np.where(
+               self.data[header] >= (360 - ((360/N_Sectors)/2)),1,
+               (((self.data[header]+(360/N_Sectors)/2)/(360/N_Sectors))+1).apply(np.floor).astype('Int64'))
+
+
+        return sector_list
 
 def make_time_index(df):
     """make_time_index Creates a DateTime index for the dataframes read from the user input .txt files in the YYYY-MM-DD HH:MM format. Deletes the YYMMDD and HHMM string columns.
@@ -365,17 +481,40 @@ def make_time_index(df):
     df.drop(columns=[0, 1], inplace=True)
     return df
 
+def gamma_DNVGL(x):
+    """gamma_DNVGL returns the gamma value (peak enhancement factor) according to the methodology proposed by DNVGL in RP-C205.
+
+    Args:
+        x (scalar): [Value to determine peak enhancement factor. The coefficient of Tp over the square root of Hs]
+
+    Returns:
+        [Scalar]: [Returns the estimate of the peak enhancement factor as a scalar]
+    """
+    if np.isnan(x):
+        sys.exit(   
+                "Erroneous value found in calculation of peak enhancement factor. Possibly a 0 or negative value in Hs data. Please check and try again."
+            )
+    if x <= 3.6: return 5
+    elif x >= 5: return 1
+    else: return np.exp((5.75-1.15*x))
+
 
 def main():
-    root = tk.Tk()
-    root.iconbitmap("OW_logo.ico")
-    # Asks the user to select the config file and stores the full path.
-    filepath = filedialog.askopenfilename(
-        title="Select the metocean configuration file."
-    )
+    # root = tk.Tk()
+    # root.iconbitmap("OW_logo.ico")
+    # # Asks the user to select the config file and stores the full path.
+    # filepath = filedialog.askopenfilename(
+    #     title="Select the metocean configuration file."
+    # )
+    filepath = os.getcwd() + "//Metocean-BoD_Config Sheet_v0.xlsx"
     metocean_data = MetoceanData(filepath)
     print(metocean_data.data.head())
+    #print(list(metocean_data.data))
+    # Method for taking mean or median within bin to be implemented 
+    if (metocean_data.config["wind_status"] & metocean_data.config["wave_status"]):
+        NSS_tables = NSS.NSS(metocean_data)
 
+    print("end")
 
 if __name__ == "__main__":
     main()
