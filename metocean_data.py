@@ -24,7 +24,7 @@ class MetoceanData:
     def __init__(self, filepath):
         # Initialise a config attribute which will be a dictionary containing all of the configuration options for the report.
         self.config = {}
-        # Initialise a bins attribute which will be a dictionary of lists containing the centre point of the different data type bins
+        # Initialise a bins attribute which will be a dictionary of lists containing the centre of the different data type bins
         self.bins = {} 
         # Execute the parse_config file to populate the config attribute.
         self.parse_config(filepath)
@@ -437,8 +437,9 @@ class MetoceanData:
         Returns:
             [list]: [list to append to self.data containing binned values]
         """
-        self.bins[header] = np.arange(0, self.data[str(header)].max(), bin_size)
-        bin_list = np.digitize(self.data[str(header)], bins=self.bins[header], right=right)*bin_size-bin_size/2
+        bines = np.arange(0, self.data[str(header)].max(), bin_size)
+        bin_list = np.digitize(self.data[str(header)], bins=bines, right=right)*bin_size-bin_size/2
+        self.bins[header] = bines + bin_size/2
 
         return bin_list
     
