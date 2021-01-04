@@ -16,6 +16,8 @@ import pandas as pd
 import numpy as np
 
 import NSS
+from scatter import Scatter
+
 
 class MetoceanData:
     """A class to manage store the user configuration settings and read and store the data inputs."""
@@ -25,7 +27,7 @@ class MetoceanData:
         # Initialise a config attribute which will be a dictionary containing all of the configuration options for the report.
         self.config = {}
         # Initialise a bins attribute which will be a dictionary of lists containing the centre of the different data type bins
-        self.bins = {} 
+        self.bins = {}
         # Execute the parse_config file to populate the config attribute.
         self.parse_config(filepath)
         # Read and store the data
@@ -266,7 +268,9 @@ class MetoceanData:
                     axis="columns",
                 )
                 if self.config["derive_peak_enhancement"]:
-                    wave_df = self.get_gamma(wave_df) #populate wave_df with values for gamma
+                    wave_df = self.get_gamma(
+                        wave_df
+                    )  # populate wave_df with values for gamma
 
         # If there are no spectral components.
         else:
@@ -291,7 +295,9 @@ class MetoceanData:
                     {2: "Hs", 3: "WvD", 4: "Tp", 5: "Tz"}, inplace=True, axis="columns"
                 )
                 if self.config["derive_peak_enhancement"]:
-                    wave_df = self.get_gamma(wave_df)  #populate wave_df with values for gamma
+                    wave_df = self.get_gamma(
+                        wave_df
+                    )  # populate wave_df with values for gamma
 
         wave_df = make_time_index(wave_df)
         if True in wave_df.index.duplicated():
@@ -372,59 +378,112 @@ class MetoceanData:
                 "Duplicate timestamps in the water data file. Please check and try again."
             )
         return water_df
-    
+
     def get_gamma(self, wave_df):
 
-        wave_df["G"] = (wave_df["Tp"]/np.sqrt(wave_df["Hs"])).map(gamma_DNVGL)
+        wave_df["G"] = (wave_df["Tp"] / np.sqrt(wave_df["Hs"])).map(gamma_DNVGL)
 
         if self.config["wave_spectral"]:
-            wave_df["G_W"] = (wave_df["Tp_W"]/np.sqrt(wave_df["Hs_W"])).map(gamma_DNVGL)
+            wave_df["G_W"] = (wave_df["Tp_W"] / np.sqrt(wave_df["Hs_W"])).map(
+                gamma_DNVGL
+            )
             wave_df["G_S"] = 10
 
         return wave_df
 
     def sectorise(self):
-        """sectorise [Creates new columns into self.data for all the relevant variables 
-        which need to be divided into bins or sectors. 
+        """sectorise [Creates new columns into self.data for all the relevant variables
+        which need to be divided into bins or sectors.
         Column headers are the same as the original plus "_bins" or "_sectors"]
-        """     
+        """
         right = False
-        if self.config["bin_type"] == "right": right = True
+        if self.config["bin_type"] == "right":
+            right = True
 
         if self.config["wind_status"]:
-            self.data["WS_bins"] = self.get_bins("WS", self.config["wind_bin_size"], right)
-            self.data["WnD_sectors"] = self.get_sectors("WnD", self.config["wind_sectors"], right)
+            self.data["WS_bins"] = self.get_bins(
+                "WS", self.config["wind_bin_size"], right
+            )
+            self.data["WnD_sectors"] = self.get_sectors(
+                "WnD", self.config["wind_sectors"], right
+            )
             if self.config["10m"]:
-                self.data["WS_10_bins"] = self.get_bins("WS_10", self.config["wind_bin_size"], right)
-                self.data["WnD_10_sectors"] = self.get_sectors("WnD_10", self.config["wind_sectors"], right)
+                self.data["WS_10_bins"] = self.get_bins(
+                    "WS_10", self.config["wind_bin_size"], right
+                )
+                self.data["WnD_10_sectors"] = self.get_sectors(
+                    "WnD_10", self.config["wind_sectors"], right
+                )
 
         if self.config["wave_status"]:
-            self.data["Hs_bins"] = self.get_bins("Hs", self.config["wave_height_bin_size"], right)
-            self.data["Tp_bins"] = self.get_bins("Tp", self.config["wave_period_bin_size"], right)
-            self.data["Tz_bins"] = self.get_bins("Tz", self.config["wave_period_bin_size"], right)
-            self.data["WvD_sectors"] = self.get_sectors("WvD", self.config["wave_sectors"], right)
+            self.data["Hs_bins"] = self.get_bins(
+                "Hs", self.config["wave_height_bin_size"], right
+            )
+            self.data["Tp_bins"] = self.get_bins(
+                "Tp", self.config["wave_period_bin_size"], right
+            )
+            self.data["Tz_bins"] = self.get_bins(
+                "Tz", self.config["wave_period_bin_size"], right
+            )
+            self.data["WvD_sectors"] = self.get_sectors(
+                "WvD", self.config["wave_sectors"], right
+            )
 
             if self.config["wave_spectral"]:
-                self.data["Hs_W_bins"] = self.get_bins("Hs_W", self.config["wave_height_bin_size"], right)
-                self.data["Tp_W_bins"] = self.get_bins("Tp_W", self.config["wave_period_bin_size"], right)
-                self.data["Tz_W_bins"] = self.get_bins("Tz_W", self.config["wave_period_bin_size"], right)
-                self.data["WvD_W_sectors"] = self.get_sectors("WvD_W", self.config["wave_sectors"], right)
-                self.data["Hs_S_bins"] = self.get_bins("Hs_S", self.config["wave_height_bin_size"], right)
-                self.data["Tp_S_bins"] = self.get_bins("Tp_S", self.config["wave_period_bin_size"], right)
-                self.data["Tz_S_bins"] = self.get_bins("Tz_S", self.config["wave_period_bin_size"], right)
-                self.data["WvD_S_sectors"] = self.get_sectors("WvD_S", self.config["wave_sectors"], right)
+                self.data["Hs_W_bins"] = self.get_bins(
+                    "Hs_W", self.config["wave_height_bin_size"], right
+                )
+                self.data["Tp_W_bins"] = self.get_bins(
+                    "Tp_W", self.config["wave_period_bin_size"], right
+                )
+                self.data["Tz_W_bins"] = self.get_bins(
+                    "Tz_W", self.config["wave_period_bin_size"], right
+                )
+                self.data["WvD_W_sectors"] = self.get_sectors(
+                    "WvD_W", self.config["wave_sectors"], right
+                )
+                self.data["Hs_S_bins"] = self.get_bins(
+                    "Hs_S", self.config["wave_height_bin_size"], right
+                )
+                self.data["Tp_S_bins"] = self.get_bins(
+                    "Tp_S", self.config["wave_period_bin_size"], right
+                )
+                self.data["Tz_S_bins"] = self.get_bins(
+                    "Tz_S", self.config["wave_period_bin_size"], right
+                )
+                self.data["WvD_S_sectors"] = self.get_sectors(
+                    "WvD_S", self.config["wave_sectors"], right
+                )
 
-            if self.config["current_status"]:
-                self.data["SV_bins"] = self.get_bins("SV", self.config["current_bin_size"], right)
-                self.data["DaV_bins"] = self.get_bins("DaV", self.config["current_bin_size"], right)
-                self.data["CD_sectors"] = self.get_sectors("CD", self.config["current_sectors"], right)
-                if self.config["current_components"]:
-                    self.data["SV_Tid_bins"] = self.get_bins("SV_Tid", self.config["current_bin_size"], right)
-                    self.data["DaV_Tid_bins"] = self.get_bins("DaV_Tid", self.config["current_bin_size"], right)
-                    self.data["CD_Tid_sectors"] = self.get_sectors("CD_Tid", self.config["current_sectors"], right)
-                    self.data["SV_Res_bins"] = self.get_bins("SV_Res", self.config["current_bin_size"], right)
-                    self.data["DaV_Res_bins"] = self.get_bins("DaV_Res", self.config["current_bin_size"], right)
-                    self.data["CD_Res_sectors"] = self.get_sectors("CD_Res", self.config["current_sectors"], right)
+        if self.config["current_status"]:
+            self.data["SV_bins"] = self.get_bins(
+                "SV", self.config["current_bin_size"], right
+            )
+            self.data["DaV_bins"] = self.get_bins(
+                "DaV", self.config["current_bin_size"], right
+            )
+            self.data["CD_sectors"] = self.get_sectors(
+                "CD", self.config["current_sectors"], right
+            )
+            if self.config["current_components"]:
+                self.data["SV_Tid_bins"] = self.get_bins(
+                    "SV_Tid", self.config["current_bin_size"], right
+                )
+                self.data["DaV_Tid_bins"] = self.get_bins(
+                    "DaV_Tid", self.config["current_bin_size"], right
+                )
+                self.data["CD_Tid_sectors"] = self.get_sectors(
+                    "CD_Tid", self.config["current_sectors"], right
+                )
+                self.data["SV_Res_bins"] = self.get_bins(
+                    "SV_Res", self.config["current_bin_size"], right
+                )
+                self.data["DaV_Res_bins"] = self.get_bins(
+                    "DaV_Res", self.config["current_bin_size"], right
+                )
+                self.data["CD_Res_sectors"] = self.get_sectors(
+                    "CD_Res", self.config["current_sectors"], right
+                )
 
     def get_bins(self, header, bin_size, right):
         """get_bins [Function to get bin values for a specific column under self.data and populate self.bins]
@@ -432,40 +491,51 @@ class MetoceanData:
         Args:
             header ([string]): [header of the column in self.data to get bins from]
             bin_size ([float]): [size of the bins for this variable, as specified in self.config]
-            right ([bool]): [indicates if right boundary is closed. If False, left boudnary is closed] 
-        
+            right ([bool]): [indicates if right boundary is closed. If False, left boudnary is closed]
+
         Returns:
             [list]: [list to append to self.data containing binned values]
         """
         bines = np.arange(0, self.data[str(header)].max(), bin_size)
-        bin_list = np.digitize(self.data[str(header)], bins=bines, right=right)*bin_size-bin_size/2
-        self.bins[header] = bines + bin_size/2
+        bin_list = (
+            np.digitize(self.data[str(header)], bins=bines, right=right) * bin_size
+            - bin_size / 2
+        )
+        self.bins[header] = bines + bin_size / 2
 
-        return bin_list
-    
+        return bin_list.round(4)
+
     def get_sectors(self, header, N_Sectors, right):
         """get_sectors [Function to get sector values for a specific column under self.data]
 
         Args:
             header ([string]): [header of the column in self.data to get sectors from]
             N_sectors ([int]): [number of sectors for this variable, as specified in self.config]
-            right ([bool]): [indicates if right boundary is closed. If False, left boudnary is closed] 
-        
+            right ([bool]): [indicates if right boundary is closed. If False, left boudnary is closed]
+
         Returns:
             [list]: [list to append to self.data containing sectorised values]
         """
         if right:
             sector_list = np.where(
-                self.data[header] > (360 - ((360/N_Sectors)/2)),1,
-                self.data[header].apply(lambda x: np.ceil(((x/(360/N_Sectors))+0.5))).astype('Int64'))
+                self.data[header] > (360 - ((360 / N_Sectors) / 2)),
+                1,
+                self.data[header]
+                .apply(lambda x: np.ceil(((x / (360 / N_Sectors)) + 0.5)))
+                .astype("Int64"),
+            )
 
         else:
             sector_list = np.where(
-               self.data[header] >= (360 - ((360/N_Sectors)/2)),1,
-               (((self.data[header]+(360/N_Sectors)/2)/(360/N_Sectors))+1).apply(np.floor).astype('Int64'))
-
+                self.data[header] >= (360 - ((360 / N_Sectors) / 2)),
+                1,
+                (((self.data[header] + (360 / N_Sectors) / 2) / (360 / N_Sectors)) + 1)
+                .apply(np.floor)
+                .astype("Int64"),
+            )
 
         return sector_list
+
 
 def make_time_index(df):
     """make_time_index Creates a DateTime index for the dataframes read from the user input .txt files in the YYYY-MM-DD HH:MM format. Deletes the YYMMDD and HHMM string columns.
@@ -482,6 +552,7 @@ def make_time_index(df):
     df.drop(columns=[0, 1], inplace=True)
     return df
 
+
 def gamma_DNVGL(x):
     """gamma_DNVGL returns the gamma value (peak enhancement factor) according to the methodology proposed by DNVGL in RP-C205.
 
@@ -492,12 +563,15 @@ def gamma_DNVGL(x):
         [Scalar]: [Returns the estimate of the peak enhancement factor as a scalar]
     """
     if np.isnan(x):
-        sys.exit(   
-                "Erroneous value found in calculation of peak enhancement factor. Possibly a 0 or negative value in Hs data. Please check and try again."
-            )
-    if x <= 3.6: return 5
-    elif x >= 5: return 1
-    else: return np.exp((5.75-1.15*x))
+        sys.exit(
+            "Erroneous value found in calculation of peak enhancement factor. Possibly a 0 or negative value in Hs data. Please check and try again."
+        )
+    if x <= 3.6:
+        return 5
+    elif x >= 5:
+        return 1
+    else:
+        return np.exp((5.75 - 1.15 * x))
 
 
 def main():
@@ -510,12 +584,38 @@ def main():
     filepath = os.getcwd() + "//Metocean-BoD_Config Sheet_v0.xlsx"
     metocean_data = MetoceanData(filepath)
     print(metocean_data.data.head())
-    #print(list(metocean_data.data))
-    # Method for taking mean or median within bin to be implemented 
-    if (metocean_data.config["wind_status"] & metocean_data.config["wave_status"]):
-        NSS_tables = NSS.NSS(metocean_data)
+    # print(list(metocean_data.data))
+    # Method for taking mean or median within bin to be implemented
+    # if metocean_data.config["wind_status"] & metocean_data.config["wave_status"]:
+    #     NSS_tables = NSS.NSS(metocean_data)
+
+    # scatter_table = Scatter(
+    #     metocean_data, ["Tp_bins", "Hs_bins"], ["WnD_sectors", "WvD_sectors"]
+    # )
+
+    # table2 = Scatter(
+    #     metocean_data,
+    #     ["WvD_sectors", "WnD_sectors"],
+    #     ["WS_bins", "WvD_sectors"],
+    #     x_sector=5.5,
+    # )
+
+    tables = []
+
+    for wind_sect in range(12):
+        tables.append([])
+        for wave_sect in range(12):
+            table = Scatter(
+                metocean_data,
+                ["Hs_bins", "Tp_bins"],
+                ["WvD_sectors", "WvD_sectors"],
+                x_filt=wind_sect + 1,
+                y_filt=wave_sect + 1,
+            )
+            tables[wind_sect].append(table)
 
     print("end")
+
 
 if __name__ == "__main__":
     main()
