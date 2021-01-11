@@ -6,8 +6,9 @@ Metocean & Energy Assessment Department
 """
 
 import sys
-#import os  # remember to remove this import
-#import time  # maybe remove this one too
+
+# import os  # remember to remove this import
+# import time  # maybe remove this one too
 import xlsxwriter
 import tkinter as tk
 from tkinter import filedialog
@@ -15,6 +16,7 @@ from openpyxl import load_workbook
 
 import pandas as pd
 import numpy as np
+
 
 class MetoceanData:
     """A class to manage store the user configuration settings and read and store the data inputs."""
@@ -160,7 +162,9 @@ class MetoceanData:
             [pandas.Dataframe]: [Dataframe of the wind data timeseries]
         """
         # Read wind data file into a dataframe
-        wind_file = filedialog.askopenfilename(title="Select the wind data file.")
+        wind_file = filedialog.askopenfilename(
+            title="Select the wind data file.", filetypes=[("Text Files", "*.txt")]
+        )
         wind_df = pd.read_csv(wind_file, sep="\t", header=None)
         # Check if the number of columns is correct.
         if self.config["10m"]:
@@ -206,7 +210,9 @@ class MetoceanData:
             [pandas.Dataframe]: [Dataframe of the wave data timeseries]
         """
         # Read wave data file into a dataframe
-        wave_file = filedialog.askopenfilename(title="Select the wave data file.")
+        wave_file = filedialog.askopenfilename(
+            title="Select the wave data file.", filetypes=[("Text Files", "*.txt")]
+        )
         wave_df = pd.read_csv(wave_file, sep="\t", header=None)
         # Check if there should be spectral wave components (swell and windsea)
         if self.config["wave_spectral"]:
@@ -309,7 +315,9 @@ class MetoceanData:
             [pandas.Dataframe]: [Dataframe of the current data timeseries]
         """
         # Read wave data file into a dataframe
-        current_file = filedialog.askopenfilename(title="Select the current data file.")
+        current_file = filedialog.askopenfilename(
+            title="Select the current data file.", filetypes=[("Text Files", "*.txt")]
+        )
         current_df = pd.read_csv(current_file, sep="\t", header=None)
         # Check if there are tidal and residual current components
         if self.config["current_components"]:
@@ -355,7 +363,9 @@ class MetoceanData:
             [pandas.Dataframe]: [Dataframe of the water data timeseries]
         """
         # Read water data file into a dataframe
-        water_file = filedialog.askopenfilename(title="Select the seawater data file.")
+        water_file = filedialog.askopenfilename(
+            title="Select the seawater data file.", filetypes=[("Text Files", "*.txt")]
+        )
         water_df = pd.read_csv(water_file, sep="\t", header=None)
         # Check if the water file has the correct number of columns.
         if len(water_df.columns) != 5:
@@ -527,6 +537,7 @@ class MetoceanData:
 
         return sector_list
 
+
 def make_time_index(df):
     """make_time_index Creates a DateTime index for the dataframes read from the user input .txt files in the YYYY-MM-DD HH:MM format. Deletes the YYMMDD and HHMM string columns.
 
@@ -541,6 +552,7 @@ def make_time_index(df):
     df.index = df.iloc[:, 0] + df.iloc[:, 1]
     df.drop(columns=[0, 1], inplace=True)
     return df
+
 
 def gamma_DNVGL(x):
     """gamma_DNVGL returns the gamma value (peak enhancement factor) according to the methodology proposed by DNVGL in RP-C205.
