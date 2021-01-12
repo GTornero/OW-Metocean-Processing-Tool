@@ -35,7 +35,8 @@ def main():
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------Creating the Scatter Table Report---------------------------
     # ---------------------------------------------------------------------------------------------
-    print_scatter_report(metocean_data)
+    if metocean_data.config["scatter_report"]:
+        print_scatter_report(metocean_data)
 
 
 if __name__ == "__main__":
