@@ -40,8 +40,17 @@ class MetoceanData:
         Args:
             filepath ([string]): [full filepath of the config excel file.]
         """
+        # Make sure that the config file is closed. Repeat until  the try statement succeeds.
+        while True:
+            try:
+                workbook = load_workbook(filepath, read_only=True)
+                break  # exit the while loop
+            except IOError:
+                input(
+                    "Could not open the configuration file. Please close the file. Press Enter to retry."
+                )
+                # Restart the loop.
 
-        workbook = load_workbook(filepath, read_only=True)
         # Check if the 'Config' sheet exists in the config file.
         if "Config" in workbook.sheetnames:
             config_sheet = workbook["Config"]
@@ -127,6 +136,10 @@ class MetoceanData:
             self.config["water_projection"] = config_sheet["D44"].value
             self.config["water_easting"] = config_sheet["D45"].value
             self.config["water_northing"] = config_sheet["D46"].value
+
+        # Parsing of output requests
+        self.config["nss_report"] = config_sheet["D49"].value
+        self.config["scatter_report"] = config_sheet["D50"].value
 
         print("Parsing configuration complete!")
 
