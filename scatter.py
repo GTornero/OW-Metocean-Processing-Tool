@@ -29,6 +29,7 @@ class Scatter:
         self.y_key = keys[1]  # Key for thefilter varaible of the  vertical axis
         self.x_filt = x_filt  # Sector number of the horizontal varaible
         self.y_filt = y_filt  # Sector number of the vertical variable
+        self.bin_type = met_data.config["bin_type"]  # Variable bin discretisation logic
 
         # Check if the user has set sectors for both variables to filter by
         if self.x_key and self.y_key and self.x_filt and self.y_filt:
@@ -111,9 +112,16 @@ class Scatter:
                 f"Table {self.y_var} Vs. {self.x_var} complete! Time taken: {round(elapsed, 2)} seconds."
             )
 
-    def print_table(self, workbook, worksheet, row=0, col=0, bin_type="left"):
-        # TODO Create a function that can print a scatter table (all data, headers, excel formatting, total columns, etc.)
-        # at a specified [row, col] (top left corner) in a specified worksheet object which is passed to the function.
+    def print_table(self, workbook, worksheet, row=0, col=0):
+        """print_table Function to print the scatter table into an excel file with all the pretty formatting.
+
+        Args:
+            workbook (xlsxwriter.Workbook): xlsxwriter library Workbook class. Excel workbook at which to print the scatter table.
+            worksheet (xlsxwriter.Worksheet): xlsxwriter library worksheet class. Excel sheet at which to print the sactter table.
+            row (int, optional): Zero-indexed row number in the excel sheet to place the table. Refers to the upper-left. Defaults to 0.
+            col (int, optional): Zero-indexed column number in the excel sheet to place the table. Refers to the upper-left. Defaults to 0.. Defaults to 0.
+        """
+
         VAR_TITLES = {
             "WS_bins": "Wind Speed @ Hub Height, [m/s]",
             "WnD_sectors": "Wind Direction @ Hub Height, [degN]",
@@ -273,7 +281,7 @@ class Scatter:
         )
 
         # Fill in the Lower and Upper headers for the bins
-        if bin_type == "left":
+        if self.bin_type == "left":
             lower_msg = "Lower (>=)"
             upper_msg = "Upper (<)"
         else:
