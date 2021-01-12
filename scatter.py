@@ -132,7 +132,7 @@ class Scatter:
             "Tz_bins": "Zero-Crossing Period (Totalsea), Tz [s]",
             "WvD_sectors": "Mean Wave Direction (Totalsea), [degN]",
             "Hs_W_bins": "Significant Wave height (Windsea), Hm0 [m]",
-            "Tp_W_bins": "Peak Wave Period (Windsea), Tz [s]",
+            "Tp_W_bins": "Peak Wave Period (Windsea), Tp [s]",
             "Tz_W_bins": "Zero-Crossing Wave Period (Windsea), Tz [s]",
             "WvD_W_sectors": "Mean Wave Direction (Windsea), [degN]",
             "Hs_S_bins": "Significant Wave Height (Swell), Hm0 [m]",
