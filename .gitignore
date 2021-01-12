@@ -7,6 +7,7 @@ tests.ipynb
 sucio.ipynb
 NSS_test_output.xlsx
 checks/
+*_Metocean_Scatter_Tables.xlsx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
