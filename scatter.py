@@ -213,17 +213,17 @@ class Scatter:
                 "bold": True,
                 "valign": "vcenter",
                 "align": "center",
-                "bg_color": "C0C0C0",
+                "bg_color": "D9D9D6",
                 "rotation": 90,
             }
         )
         # X Header Format
         x_header_format = workbook.add_format(
-            {"border": 2, "bold": True, "align": "center", "bg_color": "C0C0C0"}
+            {"border": 2, "bold": True, "align": "center", "bg_color": "D9D9D6"}
         )
         # Upper and lower bound format
         bounds_format = workbook.add_format(
-            {"border": 1, "align": "center", "bg_color": "C0C0C0"}
+            {"border": 1, "align": "center", "bg_color": "D9D9D6"}
         )
         # Main data format
         data_format = workbook.add_format({"border": 1, "align": "center"})
@@ -277,7 +277,7 @@ class Scatter:
 
         # Fill in that awkward square between x and y headers
         worksheet.write(
-            row + 1, col, None, workbook.add_format({"bg_color": "C0C0C0", "border": 2})
+            row + 1, col, None, workbook.add_format({"bg_color": "D9D9D6", "border": 2})
         )
 
         # Fill in the Lower and Upper headers for the bins
@@ -293,27 +293,27 @@ class Scatter:
             col + 1,
             lower_msg,
             workbook.add_format(
-                {"bg_color": "C0C0C0", "border": 1, "align": "center", "bold": True}
+                {"bg_color": "D9D9D6", "border": 1, "align": "center", "bold": True}
             ),
         )
         worksheet.write(
             row + 2,
             col + 2,
             None,
-            workbook.add_format({"bg_color": "C0C0C0", "border": 1}),
+            workbook.add_format({"bg_color": "D9D9D6", "border": 1}),
         )
         worksheet.write(
             row + 3,
             col + 1,
             None,
-            workbook.add_format({"bg_color": "C0C0C0", "border": 1}),
+            workbook.add_format({"bg_color": "D9D9D6", "border": 1}),
         )
         worksheet.write_string(
             row + 3,
             col + 2,
             upper_msg,
             workbook.add_format(
-                {"bg_color": "C0C0C0", "border": 1, "align": "center", "bold": True}
+                {"bg_color": "D9D9D6", "border": 1, "align": "center", "bold": True}
             ),
         )
 
@@ -362,7 +362,7 @@ class Scatter:
                 "border": 2,
                 "align": "center",
                 "valign": "vcenter",
-                "bg_color": "C0C0C0",
+                "bg_color": "D9D9D6",
             }
         )
         # Print bottom SUM header
