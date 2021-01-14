@@ -112,7 +112,7 @@ class MetoceanData:
             self.config["wave_sectors"] = config_sheet["D31"].value
 
         # Parsing config of current data
-        if config_sheet["F32"].value == "ON":
+        if config_sheet["F33"].value == "ON":
             self.config["current_status"] = True
         else:
             self.config["current_status"] = False
@@ -127,7 +127,7 @@ class MetoceanData:
             self.config["current_components"] = config_sheet["D40"].value
 
         # Parsing config of seawater data
-        if config_sheet["F41"].value == "ON":
+        if config_sheet["F42"].value == "ON":
             self.config["water_status"] = True
         else:
             self.config["water_status"] = False
@@ -344,7 +344,7 @@ class MetoceanData:
                     3: "DaV",
                     4: "CD",
                     5: "SV_Tid",
-                    6: "Dav_Tid",
+                    6: "DaV_Tid",
                     7: "CD_Tid",
                     8: "SV_Res",
                     9: "DaV_Res",
