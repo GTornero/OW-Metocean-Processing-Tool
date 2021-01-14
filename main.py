@@ -15,6 +15,7 @@ def main():
     # Inisialise the tkinter interface
     root = tk.Tk()
     root.iconbitmap("OW_logo.ico")
+    root.withdraw()
     # Asks the user to select the config file and stores the full path.
     config_filepath = filedialog.askopenfilename(
         title="Select the metocean configuration file.",
