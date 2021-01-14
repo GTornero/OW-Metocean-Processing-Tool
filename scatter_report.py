@@ -1,4 +1,4 @@
-import  time
+import time
 import xlsxwriter
 
 from scatter import Scatter
@@ -11,7 +11,7 @@ def print_scatter_report(metocean_data):
     Args:
         metocean_data (MetoceanData): A MetoceanData object from the metocean_data module.
     """
-    
+
     start_time = time.perf_counter()
 
     with xlsxwriter.Workbook(
@@ -831,5 +831,56 @@ def print_scatter_report(metocean_data):
                             col=(1 + j * (5 + table.table.shape[1])),
                         )
                 tables.clear()
+        # -----------------------------------------------------------------------------------------
+        # ----------------Surface Current Speed Vs Current Direction Tables (Omni)-----------------
+        # -----------------------------------------------------------------------------------------
+        # If current data has been input
+        if metocean_data.config["current_status"]:
+            # Omnidirectional surface current speed  table first
+            table = Scatter(metocean_data, ["CD_sectors", "SV_bins"])
+            tables.append(table)
+            # If current data by components has been input
+            if metocean_data.config["current_components"]:
+                # Create tidal surface current table
+                table = Scatter(metocean_data, ["CD_Tid_sectors", "SV_Tid_bins"])
+                tables.append(table)
+                # Create residual surface current table
+                table = Scatter(metocean_data, ["CD_Res_sectors", "SV_Res_bins"])
+                tables.append(table)
+            ws = wb.add_worksheet("Srfc CurrentSpd-CurrentDir")
+            ws.hide_gridlines(2)
+            for i, table in enumerate(tables):
+                table.print_table(
+                    wb,
+                    ws,
+                    row=1,
+                    col=(1 + i * (5 + table.table.shape[1])),
+                )
+            tables.clear()
+            # -----------------------------------------------------------------------------------------
+            # ------------Depth Averaged Current Speed Vs Current Direction Tables (Omni)--------------
+            # -----------------------------------------------------------------------------------------
+            # Omnidirectional depth averaged current speed table first
+            table = Scatter(metocean_data, ["CD_sectors", "DaV_bins"])
+            tables.append(table)
+            # If current data by components has been input
+            if metocean_data.config["current_components"]:
+                # Create tidal depth averaged current table
+                table = Scatter(metocean_data, ["CD_Tid_sectors", "DaV_Tid_bins"])
+                tables.append(table)
+                # Create residual depth averaged current table
+                table = Scatter(metocean_data, ["CD_Res_sectors", "DaV_Res_bins"])
+                tables.append(table)
+            ws = wb.add_worksheet("DpthAvg CurrentSpd-CurrentDir")
+            ws.hide_gridlines(2)
+            for i, table in enumerate(tables):
+                table.print_table(
+                    wb,
+                    ws,
+                    row=1,
+                    col=(1 + i * (5 + table.table.shape[1])),
+                )
+            tables.clear()
+
     end_time = time.perf_counter()
     print(f"Report Finished in {round((end_time - start_time)/60, 2)} minutes.")
