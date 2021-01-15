@@ -334,7 +334,16 @@ class Scatter:
             col + 3,
             row + 3 + self.table.shape[0],
             col + 2 + self.table.shape[1],
-            {"type": "3_color_scale"},
+            {
+                "type": "3_color_scale",
+                "min_color": "#63BE7B",
+                "mid_color": "#FFEB84",
+                "max_color": "#F8696B",
+                "min_type": "min",
+                "mid_type": "percentile",
+                "mid_value": 50,
+                "max_type": "max",
+            },
         )
 
         # Print the upper and lower bounds for the x and y variables
@@ -410,7 +419,16 @@ class Scatter:
             col + 3,
             row + 4 + self.table.shape[0],
             col + 2 + self.table.shape[1],
-            {"type": "3_color_scale"},
+            {
+                "type": "3_color_scale",
+                "min_color": "#63BE7B",
+                "mid_color": "#FFEB84",
+                "max_color": "#F8696B",
+                "min_type": "min",
+                "mid_type": "percentile",
+                "mid_value": 50,
+                "max_type": "max",
+            },
         )
 
         # Print row sum totals
@@ -435,7 +453,16 @@ class Scatter:
             col + 3 + self.table.shape[1],
             row + 3 + self.table.shape[0],
             col + 3 + self.table.shape[1],
-            {"type": "3_color_scale"},
+            {
+                "type": "3_color_scale",
+                "min_color": "#63BE7B",
+                "mid_color": "#FFEB84",
+                "max_color": "#F8696B",
+                "min_type": "min",
+                "mid_type": "percentile",
+                "mid_value": 50,
+                "max_type": "max",
+            },
         )
 
         # Print full table sum total
