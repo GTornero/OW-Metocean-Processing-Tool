@@ -30,8 +30,12 @@ def main():
     # ---------------------------------------------------------------------------------------------
 
     # Method for taking mean or median within bin to be implemented
-    # if metocean_data.config["wind_status"] & metocean_data.config["wave_status"]:
-    #     NSS_tables = NSS.NSS(metocean_data)
+    if (
+        metocean_data.config["nss_report"]
+        & metocean_data.config["wind_status"]
+        & metocean_data.config["wave_status"]
+    ):
+        NSS_tables = NSS.NSS(metocean_data)
 
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------Creating the Scatter Table Report---------------------------
