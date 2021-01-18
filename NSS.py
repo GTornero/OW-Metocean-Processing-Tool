@@ -289,12 +289,12 @@ class NSS():
                 col += 4
 
 def create_styles(wb):
-        """ crate_styles: [create styles to the target workbook object]
+    """ crate_styles: [create styles to the target workbook object]
 
-            Args: 
-                wb ([openpyxl workbook object]): workbook where to create the styles
+        Args: 
+            wb ([openpyxl workbook object]): workbook where to create the styles
 
-        """
+    """
     NSS_header = NamedStyle(name="NSS_header")
     NSS_header.fill = PatternFill(fill_type="solid", fgColor="072B31")
     NSS_header.font = Font(bold=True, color="00FFFFFF")
